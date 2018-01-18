@@ -15,7 +15,8 @@ export const voronoiContainerMixin = (base) => class VictoryVoronoiContainer ext
     radius: PropTypes.number,
     voronoiBlacklist: PropTypes.arrayOf(PropTypes.string),
     voronoiDimension: PropTypes.oneOf(["x", "y"]),
-    voronoiPadding: PropTypes.number
+    voronoiPadding: PropTypes.number,
+    bindTooltipToMouse: PropTypes.bool
   };
   static defaultProps = {
     ...VictoryContainer.defaultProps,
@@ -113,14 +114,14 @@ export const voronoiContainerMixin = (base) => class VictoryVoronoiContainer ext
   }
 
   getLabelPosition(props, points, labelProps) {
-    const { mousePosition, voronoiDimension, scale, voronoiPadding } = props;
+    const { mousePosition, voronoiDimension, scale, voronoiPadding, bindTooltipToMouse } = props;
     const basePosition = Helpers.scalePoint(props, omit(points[0], ["_voronoiX", "_voronoiY"]));
-    if (!voronoiDimension || points.length < 2) {
+    if ((!voronoiDimension || points.length < 2) && !bindTooltipToMouse) {
       return basePosition;
     }
 
-    const x = voronoiDimension === "y" ? mousePosition.x : basePosition.x;
-    const y = voronoiDimension === "x" ? mousePosition.y : basePosition.y;
+    const x = voronoiDimension === "y" || bindTooltipToMouse ? mousePosition.x : basePosition.x;
+    const y = voronoiDimension === "x" || bindTooltipToMouse ? mousePosition.y : basePosition.y;
     if (props.polar) {
       // TODO: Should multi-point tooltips be constrained within a circular chart?
       return { x, y };
@@ -169,11 +170,11 @@ export const voronoiContainerMixin = (base) => class VictoryVoronoiContainer ext
   }
 
   getDefaultLabelProps(props, points) {
-    const { voronoiDimension } = props;
+    const { voronoiDimension, bindTooltipToMouse } = props;
     const multiPoint = voronoiDimension && points.length > 1;
     return {
-      orientation: multiPoint ? "top" : undefined,
-      pointerLength: multiPoint ? 0 : undefined
+      orientation: multiPoint || bindTooltipToMouse ? "top" : undefined,
+      pointerLength: multiPoint || bindTooltipToMouse ? 0 : undefined
     };
   }
 
